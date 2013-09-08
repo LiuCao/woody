@@ -1,9 +1,6 @@
 woody
 ------
-[![Build Status](http://static.oschina.net/uploads/space/2013/0908/160927_OSMa_42587.jpg)](https://github.com/yuany/woody/)
-
-**Woody** is html extractor. the project name 'woody' come from a  woodpecker what cartoon character of disney.
----------------
+**Woody** [![Build Status](http://static.oschina.net/uploads/space/2013/0908/160927_OSMa_42587.jpg)](https://github.com/yuany/woody/) is html extractor. the project name 'woody' come from a  woodpecker what cartoon character of disney.
 
 ```
 import java.util.Date;
