@@ -1,9 +1,27 @@
 woody
 =====
+[![Build Status](https://api.travis-ci.org/code4craft/xsoup.png?branch=master)](https://github.com/yuany/woody/)
 
-woody is html extractor. woody come from a  woodpecker what cartoon character of disney
+<b>Woody</b> is html extractor. woody come from a  woodpecker what cartoon character of disney.
 
-a simple sample:
+```
+import java.util.Date;
+import java.util.List;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import com.answers.woody.core.model.Inject;
+import com.answers.woody.core.model.Model;
+import com.answers.woody.core.model.annotation.ComboExtract;
+import com.answers.woody.core.model.annotation.ExprType;
+import com.answers.woody.core.model.annotation.ExtractBy;
+import com.answers.woody.core.model.annotation.OP;
+import com.answers.woody.core.model.annotation.Setting;
+import com.answers.woody.core.model.annotation.Setting.Function;
+import com.answers.woody.core.parser.AnnotationExtractor;
+
+public class OsChinaBlog {
 
 	public static void main(String[] args) throws Exception {
 		Document doc = Jsoup.connect("http://www.oschina.net/news/43879/webmagic-0-3-0").timeout(60000)
@@ -54,3 +72,5 @@ a simple sample:
 		public String weibo;
 
 	}
+}
+```
