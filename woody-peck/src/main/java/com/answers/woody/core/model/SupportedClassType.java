@@ -332,24 +332,28 @@ public enum SupportedClassType {
 				return value;
 			Date date = null;
 			String regex = (String) this.dataMap().get(regexKey);
-			if (StringUtil.isNullOrEmpty(regex)) {
-				throw new IllegalArgumentException(java.lang.String.format("the '%s' can't empty/null", regexKey));
-			}
+
 			String format = (String) this.dataMap().get(formatKey);
 			if (StringUtil.isNullOrEmpty(format)) {
 				throw new IllegalArgumentException(java.lang.String.format("the '%s' can't empty/null", formatKey));
 			}
 			SimpleDateFormat dateFormat = new SimpleDateFormat(format);
-			final Pattern pattern = Pattern.compile(regex);
-			Matcher m = pattern.matcher((String) value);
-			if (m.find()) {
-				String strDate = m.group();
-				try {
-					date = dateFormat.parse(strDate);
-				} catch (ParseException e) {
-					LOG.warn("parse string to date error", e);
+			String strDate = null;
+			if (StringUtil.isNullOrEmpty(regex)) {
+				strDate = (String)value;
+			} else {
+				final Pattern pattern = Pattern.compile(regex);
+				Matcher m = pattern.matcher((String) value);
+				if (m.find()) {
+					strDate = m.group();
 				}
 			}
+			try {
+				date = dateFormat.parse(strDate);
+			} catch (ParseException e) {
+				LOG.warn("parse string to date error", e);
+			}
+			
 			return date;
 		}
 
@@ -360,12 +364,11 @@ public enum SupportedClassType {
 
 		@Override
 		public boolean validate(Object value) {
-			final String regexKey = getPrefix() + ".regex";// sct.date.regex
 			final String formatKey = getPrefix() + ".format";// sct.date.format
 			if (value instanceof java.util.Date)
 				return true;
 			if (value instanceof java.lang.String) {
-				if (this.dataMap().containsKey(regexKey) && this.dataMap().containsKey(formatKey))
+				if (this.dataMap().containsKey(formatKey))
 					return true;
 			}
 			return false;

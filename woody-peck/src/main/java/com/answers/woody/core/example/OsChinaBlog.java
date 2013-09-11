@@ -43,7 +43,7 @@ public class OsChinaBlog {
 		public String author;
 
 		@Inject
-		@ExtractBy(value = "发布于.\\s*(\\d+年\\d+月\\d+日)", type = ExprType.REGEX,dataMap={@KV(key="sct.date.regex",value="\\d+年\\d+月\\d+日"),@KV(key="sct.date.format",value="yyyy年MM月dd日")})
+		@ExtractBy(value = "发布于.\\s*(\\d+年\\d+月\\d+日)", type = ExprType.REGEX,dataMap={@KV(key="sct.date.format",value="yyyy年MM月dd日")})
 		public Date publishDate;
 
 		@Inject
