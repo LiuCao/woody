@@ -11,6 +11,7 @@ import com.answers.woody.core.model.Model;
 import com.answers.woody.core.model.annotation.ComboExtract;
 import com.answers.woody.core.model.annotation.ExprType;
 import com.answers.woody.core.model.annotation.ExtractBy;
+import com.answers.woody.core.model.annotation.KV;
 import com.answers.woody.core.model.annotation.OP;
 import com.answers.woody.core.model.annotation.Setting;
 import com.answers.woody.core.model.annotation.Setting.Function;
@@ -42,7 +43,7 @@ public class OsChinaBlog {
 		public String author;
 
 		@Inject
-		@ExtractBy(value = "发布于.\\s*(\\d+年\\d+月\\d+日)", type = ExprType.REGEX)
+		@ExtractBy(value = "发布于.\\s*(\\d+年\\d+月\\d+日)", type = ExprType.REGEX,dataMap={@KV(key="sct.date.regex",value="\\d+年\\d+月\\d+日"),@KV(key="sct.date.format",value="yyyy年MM月dd日")})
 		public Date publishDate;
 
 		@Inject

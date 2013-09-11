@@ -1,26 +1,35 @@
 package com.answers.woody.core.model;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.answers.woody.core.util.StringUtil;
 
 public enum SupportedClassType {
+
 	Byte(byte.class, Byte.class) {
 		@Override
 		public Object parseValue(java.lang.Object value) {
 			if (value == null)
 				return null;
+			boolean validate = validate(value);
+			if (!validate) {
+				throw new IllegalArgumentException("Invalid type!");
+			}
 			if (value instanceof java.lang.Byte)
 				return value;
 			return java.lang.Byte.parseByte((String) value);
@@ -29,6 +38,18 @@ public enum SupportedClassType {
 		@Override
 		public java.lang.String getInstancenName() {
 			return "Byte";
+		}
+
+		@Override
+		public boolean validate(Object value) {
+			if (value instanceof java.lang.Byte || value instanceof java.lang.String)
+				return true;
+			return false;
+		}
+
+		@Override
+		public java.lang.String getPrefix() {
+			return HEADER + ".byte";
 		}
 
 	}, // byte or Byte
@@ -51,6 +72,12 @@ public enum SupportedClassType {
 			return "Character";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // char, Character
 	Short(short.class, Short.class) {
 		@Override
@@ -69,6 +96,12 @@ public enum SupportedClassType {
 		@Override
 		public java.lang.String getInstancenName() {
 			return "Short";
+		}
+
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 
 	}, // short or Short
@@ -91,6 +124,12 @@ public enum SupportedClassType {
 			return "Integer";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // int or Integer
 	Long(long.class, Long.class) {
 		@Override
@@ -111,6 +150,12 @@ public enum SupportedClassType {
 			return "Long";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // long or Long
 	Double(double.class, Double.class) {
 		@Override
@@ -125,6 +170,12 @@ public enum SupportedClassType {
 		@Override
 		public java.lang.String getInstancenName() {
 			return "Double";
+		}
+
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 
 	}, // double or Double
@@ -143,6 +194,12 @@ public enum SupportedClassType {
 			return "Float";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // float or Float
 	Boolean(boolean.class, Boolean.class) {
 		@Override
@@ -157,6 +214,12 @@ public enum SupportedClassType {
 		@Override
 		public java.lang.String getInstancenName() {
 			return "Boolean";
+		}
+
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 
 	}, // boolean or Boolean
@@ -175,6 +238,12 @@ public enum SupportedClassType {
 			return "String";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // String
 	Array(String[].class, int[].class, Object[].class) {
 		@Override
@@ -191,6 +260,13 @@ public enum SupportedClassType {
 		public java.lang.String getInstancenName() {
 			return "Array";
 		}
+
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // String[]
 	List(java.util.List.class) {
 		@SuppressWarnings("unchecked")
@@ -206,6 +282,12 @@ public enum SupportedClassType {
 		@Override
 		public java.lang.String getInstancenName() {
 			return "List";
+		}
+
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
 		}
 
 	}, // List
@@ -227,30 +309,45 @@ public enum SupportedClassType {
 			return "Set";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	}, // Set
 	Date(java.util.Date.class) {
 		@Override
 		public Object parseValue(Object value) {
 			if (value == null)
 				return null;
+			final String regexKey = getPrefix() + ".regex";
+			final String formatKey = getPrefix() + ".format";
+			boolean validate = validate(value);
+			if (!validate) {
+				throw new IllegalArgumentException(java.lang.String.format(
+						"need have '%s' and '%s' if the value is string", regexKey, formatKey));
+			}
 			if (value instanceof java.util.Date)
 				return value;
 			Date date = null;
-			final String regex = "((?<!\\d)((\\d{2,4}(\\.|年|\\/|\\-))((((0?[13578]|1[02])(\\.|月|\\/|\\-))((3[01])|([12][0-9])|(0?[1-9])))|(0?2(\\.|月|\\/|\\-)((2[0-8])|(1[0-9])|(0?[1-9])))|(((0?[469]|11)(\\.|月|\\/|\\-))((30)|([12][0-9])|(0?[1-9]))))|((([0-9]{2})((0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))(\\.|年|\\/|\\-))0?2(\\.|月|\\/|\\-)29))日?(?!\\d))";
+			String regex = (String) this.dataMap().get(regexKey);
+			if (StringUtil.isNullOrEmpty(regex)) {
+				throw new IllegalArgumentException(java.lang.String.format("the '%s' can't empty/null", regexKey));
+			}
+			String format = (String) this.dataMap().get(formatKey);
+			if (StringUtil.isNullOrEmpty(format)) {
+				throw new IllegalArgumentException(java.lang.String.format("the '%s' can't empty/null", formatKey));
+			}
+			SimpleDateFormat dateFormat = new SimpleDateFormat(format);
 			final Pattern pattern = Pattern.compile(regex);
 			Matcher m = pattern.matcher((String) value);
 			if (m.find()) {
-				// XXX:need improve parse date from string
 				String strDate = m.group();
-				String _regex = strDate.replaceAll("\\d+", "(\\\\d+)");
-				Pattern _pattern = Pattern.compile(_regex);
-				Matcher _m = _pattern.matcher(strDate);
-				if (_m.find()) {
-					int year = java.lang.Integer.parseInt(_m.group(1));
-					int month = java.lang.Integer.parseInt(_m.group(2)) - 1;
-					int day = java.lang.Integer.parseInt(_m.group(3));
-					Calendar cal = new GregorianCalendar(year, month, day);
-					date = cal.getTime();
+				try {
+					date = dateFormat.parse(strDate);
+				} catch (ParseException e) {
+					LOG.warn("parse string to date error", e);
 				}
 			}
 			return date;
@@ -260,6 +357,20 @@ public enum SupportedClassType {
 		public java.lang.String getInstancenName() {
 			return "Date";
 		}
+
+		@Override
+		public boolean validate(Object value) {
+			final String regexKey = getPrefix() + ".regex";// sct.date.regex
+			final String formatKey = getPrefix() + ".format";// sct.date.format
+			if (value instanceof java.util.Date)
+				return true;
+			if (value instanceof java.lang.String) {
+				if (this.dataMap().containsKey(regexKey) && this.dataMap().containsKey(formatKey))
+					return true;
+			}
+			return false;
+		}
+
 	},
 	Others(Void.class) {
 		@Override
@@ -272,20 +383,39 @@ public enum SupportedClassType {
 			return "Others";
 		}
 
+		@Override
+		public boolean validate(Object value) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
 	};// Others class type.Void.class just as a mark
 
 	private Class<?>[] classes;
 
 	private int matchedIndex;
 
+	private Map<String, Object> dataMap;
+
+	private static final Logger LOG = LoggerFactory.getLogger(SupportedClassType.class);
+
+	private static final String HEADER = "sct";
+
 	private SupportedClassType(Class<?>... classes) {
 		this.classes = classes;
 		this.matchedIndex = 0;
+		this.dataMap = new HashMap<String, Object>();
 	}
 
 	public abstract Object parseValue(Object value);
 
 	public abstract String getInstancenName();
+
+	public abstract boolean validate(Object value);
+
+	public String getPrefix() {
+		return (HEADER + "." + getInstancenName()).toLowerCase();
+	}
 
 	public int getMatchedIndex() {
 		return this.matchedIndex;
@@ -314,12 +444,20 @@ public enum SupportedClassType {
 		return this.classes;
 	}
 
+	public Map<String, Object> dataMap() {
+		return this.dataMap;
+	}
+
 	public String[] classNames() {
 		String[] classNames = new String[this.classes.length];
 		for (int i = 0; i < this.classes.length; i++) {
 			classNames[i] = this.classes[i].getCanonicalName();
 		}
 		return classNames;
+	}
+
+	public static SupportedClassType fromValue(Class<?> clazz) {
+		return fromValue(clazz, null);
 	}
 
 	public static SupportedClassType fromValue(Class<?> clazz, SupportedClassType otherType) {
@@ -330,7 +468,7 @@ public enum SupportedClassType {
 			if (clazz.isArray()) {
 				return Array;
 			}
-			//deal with otherType
+			// deal with otherType
 			String clazzName = StringUtils.capitalize(clazz.getSimpleName().toLowerCase());
 			if (otherType != null) {
 				Class<?>[] _classes = otherType.valueOf();
@@ -384,6 +522,18 @@ public enum SupportedClassType {
 			clazzSet.add(clazz);
 		}
 		supportedClassType.classes = clazzSet.toArray(supportedClassType.classes);
+		return supportedClassType;
+	}
+
+	public static SupportedClassType addDataMap(SupportedClassType supportedClassType, String key, Object value) {
+		supportedClassType.dataMap.put(key, value);
+		return supportedClassType;
+	}
+
+	public static SupportedClassType addDataMap(SupportedClassType supportedClassType, Map<String, Object> dataMap) {
+		if (dataMap != null) {
+			supportedClassType.dataMap.putAll(dataMap);
+		}
 		return supportedClassType;
 	}
 

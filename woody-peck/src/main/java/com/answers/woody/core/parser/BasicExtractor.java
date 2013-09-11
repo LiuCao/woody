@@ -15,6 +15,8 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.htmlcleaner.TagNode;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.answers.woody.core.model.ExtractedField;
 import com.answers.woody.core.model.ObjectCache;
@@ -37,6 +39,8 @@ import com.answers.woody.core.util.StringUtil;
 
 public abstract class BasicExtractor implements Extractor {
 
+	private static final Logger LOG = LoggerFactory.getLogger(BasicExtractor.class);
+
 	protected List<ExtractedField> extractedFields;
 
 	protected Class<?> clazz;
@@ -56,6 +60,10 @@ public abstract class BasicExtractor implements Extractor {
 	protected abstract boolean notNull(Field field);
 
 	protected abstract String defaultValue(Field field);
+
+	protected abstract Class<?> javaBean(Field field);
+
+	protected abstract Map<String, Object> dataMap(Field field);
 
 	@Override
 	public void compile(Class<?> clazz, boolean recompile) {
@@ -105,6 +113,12 @@ public abstract class BasicExtractor implements Extractor {
 			// set defaultValue value
 			String defaultValue = defaultValue(field);
 			extractedField.setDefaultValue(defaultValue);
+			// set javeBean value
+			Class<?> isJavaBean = javaBean(field);
+			extractedField.setJaveBean(isJavaBean);
+			// set dataMap value
+			Map<String, Object> dataMap = dataMap(field);
+			extractedField.setDataMap(dataMap);
 
 			validate1(field, extractedField);
 			_extractedFields.add(extractedField);
@@ -215,7 +229,7 @@ public abstract class BasicExtractor implements Extractor {
 		if (extractedField != null) {
 			Class<?> fclazz = field.getType();
 			if (!extractedField.isMulti()) {
-				SupportedClassType supportedClassType = SupportedClassType.fromValue(fclazz, null);
+				SupportedClassType supportedClassType = SupportedClassType.fromValue(fclazz);
 				if (!SupportedClassType.in(supportedClassType, null)) {
 					Set<String> classes = SupportedClassType.getAllTypes(null);
 					throw new IllegalStateException("Field " + field.getName() + " must in " + classes);
@@ -245,7 +259,8 @@ public abstract class BasicExtractor implements Extractor {
 		Field field = fieldExtractor.getField();
 		Method setterMethod = fieldExtractor.getSetterMethod();
 
-		SupportedClassType supportedClassType = SupportedClassType.fromValue(field.getType(), null);
+		SupportedClassType supportedClassType = SupportedClassType.fromValue(field.getType());
+		SupportedClassType.addDataMap(supportedClassType, fieldExtractor.getDataMap());
 		String defaultValue = fieldExtractor.getDefaultValue();
 		// default value
 		switch (supportedClassType) {
@@ -365,10 +380,16 @@ public abstract class BasicExtractor implements Extractor {
 		default:
 			throw new IllegalArgumentException("Unsupported class type: " + field.getType().getCanonicalName());
 		}
-		boolean success = invokeSetterMethod(o, setterMethod, _value);
-		if (!success) {
-			field.set(o, _value);
+		boolean success = false;
+		if (_value != null) {
+			success = invokeSetterMethod(o, setterMethod, _value);
+			if (!success) {
+				field.set(o, _value);
+			}
+		} else {
+			LOG.warn(String.format("the parse result is null at field: %s", field.getName()));
 		}
+
 	}
 
 	private boolean invokeSetterMethod(Object o, Method setterMethod, Object value) {
@@ -378,7 +399,9 @@ public abstract class BasicExtractor implements Extractor {
 				setterMethod.invoke(o, value);
 				success = true;
 			} catch (Exception e) {
-				// nothing
+				LOG.warn(
+						String.format("Invoke stter method error, at:%s, will try to use 'field.set'",
+								setterMethod.getName()), e);
 			}
 		}
 		return success;

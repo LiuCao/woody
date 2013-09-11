@@ -62,5 +62,7 @@ public @interface ExtractBy {
 	 * @return Setting object
 	 */
 	Setting setting() default @Setting;
+	
 
+	KV[] dataMap() default {@KV};
 }

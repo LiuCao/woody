@@ -2,6 +2,7 @@ package com.answers.woody.core.model;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import com.answers.woody.core.selector.Selector;
 
@@ -19,6 +20,10 @@ public class ExtractedField {
 
 	private String defaultValue;
 
+	private Class<?> javeBean;
+
+	private Map<String, Object> dataMap;
+
 	public ExtractedField(Selector selector, Field field, Method setterMethod) {
 		super();
 		this.selector = selector;
@@ -27,6 +32,8 @@ public class ExtractedField {
 		this.isMulti = false;
 		this.isNotNull = false;
 		this.defaultValue = null;
+		this.javeBean = null;
+		this.dataMap = null;
 	}
 
 	public Selector getSelector() {
@@ -68,9 +75,31 @@ public class ExtractedField {
 		return this;
 	}
 
+	public Class<?> javeBean() {
+		return javeBean;
+	}
+
+	public ExtractedField setJaveBean(Class<?> javeBean) {
+		this.javeBean = javeBean;
+		return this;
+	}
+
+	public Map<String, Object> getDataMap() {
+		return dataMap;
+	}
+
+	public ExtractedField setDataMap(Map<String, Object> dataMap) {
+		this.dataMap = dataMap;
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "ExtractedField [selector=" + selector + ", field=" + field + ", setterMethod=" + setterMethod
-				+ ", isMulti=" + isMulti + ", isNotNull=" + isNotNull + ", defaultValue=" + defaultValue + "]";
+				+ ", isMulti=" + isMulti + ", isNotNull=" + isNotNull + ", defaultValue=" + defaultValue
+				+ ", javeBean=" + javeBean + ", dataMap=" + dataMap + "]";
 	}
+
+	
+
 }

@@ -1,6 +1,7 @@
 package com.answers.woody.core.parser;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,10 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import com.answers.woody.core.model.FuntionObj;
 import com.answers.woody.core.model.SettingConstant;
+import com.answers.woody.core.model.SupportedClassType;
 import com.answers.woody.core.model.annotation.ComboExtract;
 import com.answers.woody.core.model.annotation.ComboExtracts;
 import com.answers.woody.core.model.annotation.ExprType;
 import com.answers.woody.core.model.annotation.ExtractBy;
+import com.answers.woody.core.model.annotation.ExtractedBean;
+import com.answers.woody.core.model.annotation.KV;
 import com.answers.woody.core.model.annotation.OP;
 import com.answers.woody.core.model.annotation.Setting;
 import com.answers.woody.core.model.annotation.Setting.Function;
@@ -27,7 +31,7 @@ public class AnnotationExtractor extends BasicExtractor {
 	private static final Logger LOG = LoggerFactory.getLogger(AnnotationExtractor.class);
 
 	private static enum ExtractedAnnotation {
-		ExtractBy, ComboExtract, ComboExtracts, UNKNOWN;
+		ExtractedBean, ExtractBy, ComboExtract, ComboExtracts, UNKNOWN;
 	}
 
 	@Override
@@ -65,6 +69,27 @@ public class AnnotationExtractor extends BasicExtractor {
 		return defaultValue;
 	}
 
+	@Override
+	protected Class<?> javaBean(Field field) {
+		Class<?> javaBean = null;
+		Object result = invokeAnnotationMethod(field, "javaBean");
+		if (result != null) {
+			javaBean = (Class<?>) result;
+		}
+		return javaBean;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Map<String, Object> dataMap(Field field) {
+		Map<String, Object> dataMap = null;
+		Object result = invokeAnnotationMethod(field, "dataMap");
+		if (result != null) {
+			dataMap = (HashMap<String, Object>) result;
+		}
+		return dataMap;
+	}
+
 	private Object invokeAnnotationMethod(Field field, String methodName) {
 		Object value = null;
 		Annotation annotation = null;
@@ -72,6 +97,7 @@ public class AnnotationExtractor extends BasicExtractor {
 		for (Annotation _annotation : annotations) {
 			ExtractedAnnotation extractedAnnotation = getExtractedAnnotation(_annotation);
 			switch (extractedAnnotation) {
+			case ExtractedBean:
 			case ExtractBy:
 			case ComboExtract:
 			case ComboExtracts:
@@ -84,18 +110,46 @@ public class AnnotationExtractor extends BasicExtractor {
 				break;
 			}
 		}
-		if (annotation != null) {
-			try {
-				Method method = annotation.getClass().getDeclaredMethod(methodName);
-				if (method != null) {
-					if (!method.isAccessible()) {
-						method.setAccessible(true);
-					}
-					value = method.invoke(annotation);
-				}
-			} catch (Exception e) {
-				LOG.warn(e.toString());
+		if (annotation == null) {
+			LOG.warn(String.format("ignore to extract the field, because of it don't set Extract Query, at:%s",
+					field.getName()));
+			return value;
+		}
+
+		// handle ExtractedBean case
+		if (ExtractedBean.class.equals(annotation.annotationType())) {
+			ExtractedBean extractedBean = ((ExtractedBean) annotation);
+			if ("javaBean".equals(methodName)) {
+				value = extractedBean.clazz();
+				return value;
 			}
+			annotation = extractedBean.border();
+		}
+
+		try {
+			Method method = annotation.getClass().getDeclaredMethod(methodName);
+			if (method != null) {
+				if (!method.isAccessible()) {
+					method.setAccessible(true);
+				}
+				value = method.invoke(annotation);
+				if (method.getName().equals("dataMap")) {
+					int len = Array.getLength(value);
+					Map<String, Object> dataMap = new HashMap<String, Object>();
+					for (int i = 0; i < len; i++) {
+						KV kv = (KV) Array.get(value, i);
+						String key = kv.key();
+						String strVal = kv.value();
+						Class<?> clazz = kv.clazz();
+						SupportedClassType supportedClassType = SupportedClassType.fromValue(clazz);
+						Object val = supportedClassType.parseValue(strVal);
+						dataMap.put(key, val);
+					}
+					value = dataMap;
+				}
+			}
+		} catch (Exception e) {
+			LOG.warn(e.toString());
 		}
 		return value;
 	}
@@ -108,6 +162,8 @@ public class AnnotationExtractor extends BasicExtractor {
 			extractedAnnotation = ExtractedAnnotation.ComboExtract;
 		} else if (ComboExtracts.class.equals(annotation.annotationType())) {
 			extractedAnnotation = ExtractedAnnotation.ComboExtracts;
+		} else if (ExtractedBean.class.equals(annotation.annotationType())) {
+			extractedAnnotation = ExtractedAnnotation.ExtractedBean;
 		} else {
 			extractedAnnotation = ExtractedAnnotation.UNKNOWN;
 		}
@@ -121,6 +177,11 @@ public class AnnotationExtractor extends BasicExtractor {
 			ExtractedAnnotation extractedAnnotation = getExtractedAnnotation(annotation);
 			boolean skip = false;
 			switch (extractedAnnotation) {
+			case ExtractedBean:
+				ExtractedBean extractedBean = (ExtractedBean) annotation;
+				selector = createExtractedBeanSelector(extractedBean);
+				skip = true;
+				break;
 			case ExtractBy:
 				ExtractBy extractBy = (ExtractBy) annotation;
 				selector = createSingleSelector(extractBy);
@@ -200,6 +261,13 @@ public class AnnotationExtractor extends BasicExtractor {
 		}
 		OP op = comboExtracts.op();
 		selector = appendSelector(op, selectorList);
+		return selector;
+	}
+
+	private Selector createExtractedBeanSelector(ExtractedBean extractedBean) {
+		Selector selector = null;
+		ExtractBy extractBy = extractedBean.border();
+		selector = createSingleSelector(extractBy);
 		return selector;
 	}
 
