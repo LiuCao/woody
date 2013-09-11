@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+    <groupId>com.answers.spider.woody</groupId>
+    <version>1.1-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+    <artifactId>woody-parent</artifactId>
+    <name>woody-parent</name>
+    <description>
+       Woody Check is html extractor. the project name 'woody' come from a woodpecker what cartoon character of disney.
+    </description>
+    <url>https://github.com/yuany/</url>
+    <developers>
+        <developer>
+            <id>yuany</id>
+            <name>Ligang Yao</name>
+            <email>ligang.yao@answers.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:yuany/woody.git</connection>
+        <developerConnection>scm:git:git@github.com:yuany/woody.git</developerConnection>
+        <url>git@github.com:yuany/woody.git</url>
+      <tag>HEAD</tag>
+  </scm>
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <modules>
+        <module>woody-peck</module>
+    </modules>
+
+    <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <artifact-version>${project.version}</artifact-version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
