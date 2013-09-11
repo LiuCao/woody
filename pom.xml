@@ -41,7 +41,7 @@
 	</licenses>
 
 	<modules>
-		<module>woody-peck</module>
+		<module>woody-core</module>
 	</modules>
 
 	<dependencyManagement>
